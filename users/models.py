@@ -51,6 +51,8 @@ class NewUser(AbstractBaseUser, PermissionsMixin):
     state = models.CharField(max_length=60, blank=True)
     country = models.CharField(max_length=60, blank=True)
     image = models.ImageField(upload_to='images/', blank=True)
+    liked_books = ArrayField(models.CharField(max_length=15), blank=True, null=True)
+    comment = ArrayField(models.CharField(max_length=800), blank=True, null=True)
     catalogue = ArrayField(models.CharField(max_length=100), blank=True, null=True)
     curr_reading = ArrayField(models.CharField(max_length=30), blank=True, null=True)
     readed = ArrayField(models.CharField(max_length=30), blank=True, null=True)
@@ -70,14 +72,14 @@ class NewUser(AbstractBaseUser, PermissionsMixin):
 
 
 class Comments(models.Model):
-    bid = models.CharField(max_length=100)
+    bid = models.CharField(max_length=20)
+    title = models.CharField(max_length=100)
     uid = models.ForeignKey(NewUser, on_delete=models.CASCADE)
     body = models.TextField(max_length=800)
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.TextField(max_length = 30)
 
     def __str__(self):
         return self.uid.user_name
-
 
 class Likes(models.Model):
     bid = models.CharField(max_length=100)

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import CustomUserCreate, BlacklistTokenUpdateView, UserUpdate, userdetailview, CommentsCreateRetrieve, BookComments, LikeUpdate, CatalogueRemove, getCatalogue, UserCatalogue, getLikeCount
+from .views import CustomUserCreate, BlacklistTokenUpdateView, UserUpdate, userdetailview, CommentsCreateRetrieve, BookComments, LikeUpdate, CatalogueRemove, getCatalogue, UserCatalogue, getLikeCount, getReading, ReadingShelfRemove
 
 app_name = 'users'
 
@@ -16,5 +16,7 @@ urlpatterns = [
     path('book/likes/<str:pk>/', getLikeCount, name="likes_count"),
     path('book/likes/<str:pk>/<str:uid>/', LikeUpdate.as_view(), name="likes"),
     path('user/catalogue/<int:pk>/', CatalogueRemove, name = "catalogue"),
-    path('user/get_catalogue/<str:id>/<str:pk>/', getCatalogue, name = "get_catalogue")
+    path('user/curr_reading/<int:pk>/', ReadingShelfRemove, name = "reading_shelf"),
+    path('user/get_catalogue/<str:id>/<str:pk>/', getCatalogue, name = "get_catalogue"),
+    path('user/get_reading/<str:id>/<str:pk>/', getReading, name = "get_reading")
 ]

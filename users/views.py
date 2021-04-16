@@ -55,7 +55,13 @@ def UserUpdate(request, pk):
 def userdetailview(request, pk):
     user = NewUser.objects.get(id=pk)
     serializer = CustomUserSerializer(user)
-    return Response(serializer.data)
+    comments = Comments.objects.filter(uid=pk)
+    comment_serializer = CommentSerializer(comments, many=True)
+    for item in comment_serializer.data:
+        user = NewUser.objects.get(id = item['uid'])
+        item['name'] = user.user_name
+    data = {'user_detail': serializer.data, 'user_comments': comment_serializer.data}
+    return Response(data)
 
 
 class BlacklistTokenUpdateView(APIView):
@@ -82,13 +88,33 @@ class CommentsCreateRetrieve(APIView):
         return Response(serializer.data)
 
     def post(self, id, format='json'):
-        serializer = CommentSerializer(
-            data=self.request.data)
+        # Serializer for saving a comment 
+        data = self.request.data
+        data['created_at'] = datetime.datetime.now().strftime('%H:%M hrs %d %b %Y')
+        serializer = CommentSerializer(data=data)
         if serializer.is_valid():
+
+
+
+
+            # print(serializer.validated_data)
+            # serializer['created_at'] = datetime.datetime.now().strftime('%H:%M hrs %d %b %Y')
+            # print(serializer.validated_data['created_at'], "95")
             comment = serializer.save()
+            comment.created_at = datetime.datetime.now().strftime('%H:%M hrs %d %b %Y')
+            comment.save()
             if comment:
-                json = serializer.data
-                return Response(json, status=status.HTTP_201_CREATED)
+                comments = Comments.objects.filter(bid = self.request.data['bid'])
+                # Serializer for fetching all comments for a book
+                comment_serializer = CommentSerializer(comments, many=True)
+                if comment_serializer:
+                    for item in comment_serializer.data:
+                        user = NewUser.objects.get(id = item['uid'])
+                        item['name'] = user.user_name
+                        # item.created_at = item.created_at.strftime('%a %d %b')
+                        # item['created_at'] = item['created_at'].strftime('%a %d %b %Y')
+                serializer = comment_serializer.data
+                return Response(comment_serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -97,13 +123,10 @@ def BookComments(request, pk):
     c = Comments.objects.filter(bid=pk)
     serializer = CommentSerializer(c, many=True)
     data = {}
-    # data['name'] = "Sanket"
     data = serializer.data
     for item in serializer.data:
         user = NewUser.objects.get(id = item['uid'])
         item['name'] = user.user_name
-        print(item)
-        # data.update(item)
     return Response(data)
 
 
@@ -139,10 +162,16 @@ class LikeUpdate(APIView):
 
         if serializer.is_valid():
             serializer.save()
+            user = NewUser.objects.get(id=self.request.data['uid'])
+            if user.liked_books is None:
+                user.liked_books = [self.request.data['bid']]
+            else:
+                user.liked_books += [self.request.data['bid']]
             book = Likes.objects.filter(bid=self.request.data['bid'])
             no_of_likes = book.aggregate(Sum('total_likes'))
             data = dict(serializer.data)
             data.update(no_of_likes)
+            user.save()
             return Response(data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -153,12 +182,14 @@ class LikeUpdate(APIView):
             instance=user, data=self.request.data, partial=True)
         if serializer.is_valid():
             json = serializer.save()
+            user = NewUser.objects.get(id=self.request.data['uid'])
+            if self.request.data['bid'] in user.liked_books:
+                user.liked_books.remove(self.request.data['bid'])
+                user.save()
             book = Likes.objects.filter(bid=self.request.data['bid'])
             no_of_likes = book.aggregate(Sum('total_likes'))
             data = dict(serializer.data)
             data.update(no_of_likes)
-            """ data.update(serializer.data)
-            data.update(no_of_likes) """
             return Response(data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -176,6 +207,17 @@ def CatalogueRemove(request, pk):
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['PUT'])
+def ReadingShelfRemove(request, pk):
+    user = NewUser.objects.get(id=pk)
+    serializer = CustomUserSerializer(instance = user)
+    book_id = request.data['curr_reading']
+    if book_id in user.curr_reading:
+        user.curr_reading.remove(book_id)
+        user.save()
+        return Response(status=status.HTTP_201_CREATED)
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET'])
 def getCatalogue(request, id, pk):
     user = NewUser.objects.get(id=id)
@@ -183,6 +225,16 @@ def getCatalogue(request, id, pk):
     if user.catalogue is not None and book_id in user.catalogue:
         return Response({'val': True})
     return Response({'val': False})
+
+
+@api_view(['GET'])
+def getReading(request, id, pk):
+    user = NewUser.objects.get(id=id)
+    book_id = pk 
+    if user.curr_reading is not None and book_id in user.curr_reading:
+        return Response({'val': True})
+    return Response({'val': False})
+
 
 @api_view(['GET'])
 def UserCatalogue(request, id):

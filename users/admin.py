@@ -15,7 +15,7 @@ class UserAdminConfig(UserAdmin):
                     'is_active', 'is_staff')
     fieldsets = (
         (None, {'fields': ('email', 'user_name', 'first_name', 'fav_genre',
-                           'fav_author', 'genre', 'catalogue', 'state', 'country', 'image', 'status')}),
+                           'fav_author', 'genre', 'catalogue', 'liked_books', 'curr_reading', 'state', 'country', 'image', 'status')}),
         ('Permissions', {'fields': ('is_staff', 'is_active')}),
         ('Personal', {'fields': ('about_me',)}),
     )
@@ -29,7 +29,7 @@ class UserAdminConfig(UserAdmin):
          ),
     )
 
-
+    
 admin.site.register(NewUser, UserAdminConfig)
 admin.site.register(Comments)
 admin.site.register(Likes)

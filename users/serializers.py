@@ -19,10 +19,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             data.update({'last_login': self.user.created_at})
             data.update({'user': self.user.user_name})
             data.update({'id': self.user.id})
-            data.update({'image': self.user.image.url})
+            if self.user.image is not None:
+                data.update({'image': "http://localhost:8000" + self.user.image.url})
             data.update({'catalogue': self.user.catalogue})
             data.update({'fav_genre': self.user.fav_genre})
-            data.update({'stauts': self.user.status})
+            data.update({'liked_books': self.user.liked_books})
+            data.update({'currently_reading': self.user.curr_reading})
+            data.update({'status': self.user.status})
             self.user.created_at = datetime.datetime.now()
             self.user.login_count = self.user.login_count + 1
             self.user.save()
@@ -56,7 +59,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewUser
         fields = ('user_name', 'email', 'password', 'fav_genre',
-                  'fav_author', 'about_me', 'genre', 'catalogue', 'curr_reading', 'readed', 'state', 'country', 'image', 'status')
+                  'fav_author', 'about_me', 'genre', 'catalogue', 'curr_reading', 'liked_books', 'readed', 'state', 'country', 'image', 'status')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -74,7 +77,15 @@ class CustomUserSerializer(serializers.ModelSerializer):
                 if attr == 'password':
                     self.instance.set_password(value)
                 elif attr == 'catalogue':
-                    self.instance.catalogue += value
+                    if self.instance.catalogue is None:
+                        self.instance.catalogue = value
+                    else:
+                        self.instance.catalogue += value
+                elif attr == 'curr_reading':
+                    if self.instance.catalogue is None:
+                        self.instance.curr_reading = value
+                    else:
+                        self.instance.curr_reading += value
                 else:
                     setattr(instance, attr, value)
 
@@ -86,7 +97,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comments
-        fields = ('bid', 'uid', 'body', 'created_at')
+        fields = ('bid', 'title', 'uid', 'body', 'created_at')
 
 
 class LikeSerializer(serializers.ModelSerializer):
