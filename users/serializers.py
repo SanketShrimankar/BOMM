@@ -19,9 +19,14 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             data.update({'last_login': self.user.created_at})
             data.update({'user': self.user.user_name})
             data.update({'id': self.user.id})
-            if self.user.image is not None:
+            if self.user.image is None:
+                data.update({'image': 'null'})
+            else:
                 data.update({'image': "http://localhost:8000" + self.user.image.url})
-            data.update({'catalogue': self.user.catalogue})
+            if self.user.catalogue is None:
+                data.update({'catalogue': self.user.catalogue})
+            else:
+                data.update({'catalogue': self.user.catalogue})
             data.update({'fav_genre': self.user.fav_genre})
             data.update({'liked_books': self.user.liked_books})
             data.update({'currently_reading': self.user.curr_reading})
@@ -82,7 +87,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
                     else:
                         self.instance.catalogue += value
                 elif attr == 'curr_reading':
-                    if self.instance.catalogue is None:
+                    if self.instance.curr_reading is None:
                         self.instance.curr_reading = value
                     else:
                         self.instance.curr_reading += value

@@ -55,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'mysite.urls'
@@ -125,7 +126,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-DATETIME_INPUT_FORMATS = ('%H:%M %d %b %Y')
 
 
 
@@ -184,7 +184,7 @@ DJOSER = {
     # 'SET_USERNAME_RETYPE': True,
     # 'SET_PASSWORD_RETYPE': True,
     'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True,
-    'PASSWORD_RESET_CONFIRM_URL': 'localhost:3000/password/reset/confirm/{uid}/{token}',
+    'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}',
     'USERNAME_RESET_CONFIRM_URL': 'email/reset/confirm/{uid}/{token}',
     # 'ACTIVATION_URL': 'activate/{uid}/{token}',
     # 'SEND_ACTIVATION_EMAIL': True,
@@ -192,3 +192,4 @@ DJOSER = {
         'password_reset': 'djoser.serializers.SendEmailResetSerializer'
     }
 }
+
